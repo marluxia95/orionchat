@@ -1,4 +1,4 @@
-#include "chadchat.h"
+#include "orion.h"
 
 #define MAX_BUFSIZE 2048
 #define MAX_CLIENTS 20
@@ -180,11 +180,11 @@ int main (int argc, const char* argv[])
 	}
 
 	int port = atoi(argv[2]);	
-	
 
+	server_init(argv[1], port);
+	server_loop();
+	server_close();
 	
-	
-
 	return 0;
 
 }

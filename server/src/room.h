@@ -1,7 +1,7 @@
 #ifndef __ROOM_INCLUDE_
 #define __ROOM_INCLUDE_
 
-#include "chadchat.h"
+#include "orion.h"
 
 #define MAX_CLIENTS_PER_ROOM 16384
 #define MAX_CHATROOMS 255

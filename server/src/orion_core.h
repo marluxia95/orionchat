@@ -1,7 +1,7 @@
 #ifndef __CORE_INCLUDE_
 #define __CORE_INCLUDE_
 
-#include "chadchat.h"
+#include "orion.h"
 
 typedef struct {
 	struct sockaddr_in c_address;

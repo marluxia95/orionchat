@@ -52,6 +52,12 @@ void chatroom_send(const char* msg, int crid)
     pthread_mutex_unlock(&chatroom_lock);
 }
 
-void chatroom_adduser(int uid, int crid);
+void chatroom_adduser(int uid, int crid)
+{
 
-void chatroom_removeuser(int uid, int crid);
+}
+
+void chatroom_removeuser(int uid, int crid)
+{
+
+}
