@@ -1,5 +1,5 @@
-#ifndef __CHADCHAT_INCLUDE__
-#define __CHADCHAT_INCLUDE__
+#ifndef __ORION_INCLUDE__
+#define __ORION_INCLUDE__
 
 #include <stdio.h>
 #include <unistd.h>
@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <netdb.h>
 
-#include "chadchat_core.h"
+#include "orion_core.h"
 #include "room.h"
 
 

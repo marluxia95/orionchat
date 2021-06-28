@@ -1,7 +1,5 @@
-ODIR = ./src
 
-_OBJ += chadchat.c room.c
-OBJS = $(patsubst %,$(ODIR)/%,$(_OBJ))
+OBJS += orion.c room.c
 
 CC = gcc
 
@@ -11,5 +9,5 @@ LINKER_FLAGS = -lpthread
 OBJ_NAME = server
 
 all : $(OBJS)
-	$(CC) -I./src $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+	$(CC) -I. $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
 
