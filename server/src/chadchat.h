@@ -12,7 +12,8 @@
 #include <pthread.h>
 #include <netdb.h>
 
-#include "client.h"
+#include "chadchat_core.h"
 #include "room.h"
+
 
 #endif

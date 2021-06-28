@@ -1,7 +1,7 @@
 #include "chadchat.h"
 
 #define MAX_BUFSIZE 2048
-#define MAX_CLIENTS 12
+#define MAX_CLIENTS 20
 
 bool active = true;
 int cli_count = 0;
@@ -122,8 +122,6 @@ void server_init(const char* address, int port)
 	server.sfd = socket(AF_INET, SOCK_STREAM, 0);
 	server.s_address.sin_family = AF_INET;
 	server.s_address.sin_port = htons(port);
-
-	atexit(server_close);
 
 	if(!inet_pton(AF_INET, address, &server.s_address.sin_addr)){
 		puts("Invalid server address");
