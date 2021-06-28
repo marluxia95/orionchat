@@ -2,15 +2,44 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <string.h>
+#include <pthread.h>
+
+
 #define PORT 8080
+#define MAX_BUFSIZE 2048
+
+int sock = 0, valread;
+struct sockaddr_in server_addr;
+bool active = true;
+char input_buffer[MAX_BUFSIZE];
+char output_buffer[MAX_BUFSIZE];
+int bufpos = 0;
+char c;
+
+// Sends a message 
+void send_to(char* msg, int sfd)
+{
+	if(write(sfd, msg, strlen(msg)) < 0){
+		perror("Failed to send message");
+	}
+}
+
+void* response_handler(void* arg)
+{
+	while((valread = read( sock, input_buffer, 2048 )) != 0){
+		
+		puts("Recv");
+		printf("%s\n", input_buffer);
+
+		memset(&input_buffer, 0, MAX_BUFSIZE);
+	}
+}
 
 int main ( int argc, char const* argv[] ) 
 {
-	int sock = 0, valread;
-	struct sockaddr_in server_addr;
-	char buffer[2048] = {0};
-	char* msg = "Hello World!";
+	pthread_t tid;
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 		puts("Socket error");
@@ -30,19 +59,20 @@ int main ( int argc, char const* argv[] )
 		return -1;
 	}
 
-	/*
+	pthread_create(&tid, NULL, &response_handler, NULL);
 
-	if(send(sock, msg, strlen(msg), 0) <0 ){
-		puts("Failed to send message");
-		return -1;
-	}
+	do{
+		c = getchar();
+		if(c == '\n' || c == EOF) {
+			puts("Sending");
+            output_buffer[bufpos + 1] = '\0';
+			send_to(output_buffer, sock);
+			memset(&output_buffer, 0, MAX_BUFSIZE);
+			bufpos = 0;
+        }
+        bufpos++;
 
-	puts("Message sent");
-	valread = read( sock, buffer, 2048 );
-	printf("%s\n", buffer);
 
 
-	
-	*/
-	
+	} while( active );
 }

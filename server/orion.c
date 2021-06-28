@@ -20,7 +20,7 @@ void clear_buffer(char* buf)
 	memset(buf, 0, sizeof(buf));
 }
 
-/* Adds a new client */
+// Adds a new client 
 void add_client(client_t* cli)
 {
 	pthread_mutex_lock(&clients_lock);
@@ -31,7 +31,7 @@ void add_client(client_t* cli)
 	pthread_mutex_unlock(&clients_lock);
 }
 
-/* Removes a client */
+// Removes a client 
 void remove_client(int id)
 {
 	pthread_mutex_lock(&clients_lock);
@@ -42,13 +42,13 @@ void remove_client(int id)
 	pthread_mutex_unlock(&clients_lock);
 }
 
-/* Close all server connections */
+// Close all server connections 
 void close_all()
 {
 
 }
 
-/* Sends a message to a client */
+// Sends a message to a client 
 void send_to(const char* msg, int cfd)
 {
 	if(write(cfd, msg, strlen(msg)) < 0){
@@ -57,7 +57,7 @@ void send_to(const char* msg, int cfd)
 }
 
 
-/* Sends a message to all clients BUT the sender */
+// Sends a message to all clients BUT the sender 
 void send_all(const char* msg, int senderid)
 {
 	pthread_mutex_lock(&clients_lock);
@@ -70,7 +70,7 @@ void send_all(const char* msg, int senderid)
 	pthread_mutex_unlock(&clients_lock);
 }
 
-/* Sends a message to all clients */
+// Sends a message to all clients 
 void broadcast(const char* msg)
 {
 	pthread_mutex_lock(&clients_lock);
@@ -81,10 +81,11 @@ void broadcast(const char* msg)
 	pthread_mutex_unlock(&clients_lock);
 }
 
-/* Handles a client connection ( always run in a thread ) */
+// Handles a client connection ( always run in a thread ) 
 void* client_handler(void* c_arg)
 {
 	cli_count++;
+	int msglen;
 
 	client_t* cli = (client_t*)c_arg;
 
@@ -104,39 +105,29 @@ void* client_handler(void* c_arg)
 	sprintf(output_buffer, "%d Joined the chat!", cli->id);
 	send_all(output_buffer, cli->id);
 
-		puts("Leave");
+	while((msglen = read(cli->cfd, input_buffer, MAX_BUFSIZE)) != 0 ){
+		puts("Message");
+		if(input_buffer[0] == '/'){
+			// Command shit
+
+			continue;
+		}
+
+		snprintf(output_buffer, MAX_BUFSIZE, "<%d> %s", cli->id, input_buffer);
+		puts(output_buffer);
+		send_all(output_buffer, cli->id);
+	}
+
+	puts("Leave");
+
+	cli_count--;
+	if(cli_count){
 		sprintf(output_buffer, "%d left the server", cli->id);
 		send_all(output_buffer, cli->id);
-		close(cli->cfd);
-		remove_client(cli->id);
-		pthread_exit(NULL);
+	}
 
-
+	remove_client(cli->id);
 	pthread_exit(NULL);
-}
-
-void server_init(const char* address, int port)
-{
-	server.sfd = 0;
-
-	server.sfd = socket(AF_INET, SOCK_STREAM, 0);
-	server.s_address.sin_family = AF_INET;
-	server.s_address.sin_port = htons(port);
-
-	if(!inet_pton(AF_INET, address, &server.s_address.sin_addr)){
-		puts("Invalid server address");
-		exit(EXIT_FAILURE);
-	}
-
-	if(bind(server.sfd, (struct sockaddr*)&server.s_address, sizeof(server.s_address)) < 0){
-		perror("Bind failed");
-		exit(EXIT_FAILURE);
-	}
-
-	if(listen(server.sfd, 3) < 0){
-		perror("Listen");
-		exit(EXIT_FAILURE);
-	}
 }
 
 void server_loop()
@@ -160,7 +151,6 @@ void server_loop()
 
 		add_client(new_client);
 
-		// Add connection handler shits
 		pthread_create(&tid, NULL, &client_handler, (void*)new_client);
 	} while (true);
 }
@@ -174,17 +164,41 @@ void server_close()
 
 int main (int argc, const char* argv[])
 {
+	char* address;
+	int port;
 	if(argc < 3){
-		printf("Simple socket server \n     Usage : %s [host] [port] \n", argv[0]);
-		return 0;		
+		address = "0.0.0.0";
+		port = 8080;
+	}else{
+		address = argv[1];
+		port = atoi(argv[2]);	
 	}
 
-	int port = atoi(argv[2]);	
+	server.sfd = 0;
 
-	server_init(argv[1], port);
+	server.sfd = socket(AF_INET, SOCK_STREAM, 0);
+	server.s_address.sin_family = AF_INET;
+	server.s_address.sin_port = htons(port);
+
+	if(!inet_pton(AF_INET, address, &server.s_address.sin_addr)){
+		puts("Invalid server address");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("Server listening on %s:%d\n", address, port);
+
+	if(bind(server.sfd, (struct sockaddr*)&server.s_address, sizeof(server.s_address)) < 0){
+		perror("Bind failed");
+		exit(EXIT_FAILURE);
+	}
+
+	if(listen(server.sfd, 3) < 0){
+		perror("Listen");
+		exit(EXIT_FAILURE);
+	}
+
 	server_loop();
-	server_close();
-	
+
 	return 0;
 
 }
