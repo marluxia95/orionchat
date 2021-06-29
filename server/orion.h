@@ -13,6 +13,7 @@
 #include <netdb.h>
 
 #include "orion_core.h"
+#include "orion_array.h"
 #include "room.h"
 
 

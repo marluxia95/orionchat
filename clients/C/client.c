@@ -8,7 +8,7 @@
 
 
 #define PORT 8080
-#define MAX_BUFSIZE 2048
+#define MAX_BUFSIZE 1024
 
 int sock = 0, valread;
 struct sockaddr_in server_addr;
@@ -28,7 +28,7 @@ void send_to(char* msg, int sfd)
 
 void* response_handler(void* arg)
 {
-	while((valread = read( sock, input_buffer, 2048 )) != 0){
+	while((valread = read( sock, input_buffer, MAX_BUFSIZE )) != 0){
 		
 		puts("Recv");
 		printf("%s\n", input_buffer);
@@ -59,15 +59,17 @@ int main ( int argc, char const* argv[] )
 		return -1;
 	}
 
+	
+
 	pthread_create(&tid, NULL, &response_handler, NULL);
 
 	do{
 		c = getchar();
 		if(c == '\n' || c == EOF) {
-			puts("Sending");
             output_buffer[bufpos + 1] = '\0';
 			send_to(output_buffer, sock);
-			memset(&output_buffer, 0, MAX_BUFSIZE);
+			memset(&output_buffer, 0, bufpos);
+			printf("Sent %d bytes", bufpos);
 			bufpos = 0;
         }
         bufpos++;

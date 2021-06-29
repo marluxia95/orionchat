@@ -1,5 +1,5 @@
 
-OBJS += orion.c room.c
+OBJS += orion.c orion_array.c orion_enc.c room.c
 
 CC = gcc
 

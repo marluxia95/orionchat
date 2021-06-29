@@ -1,6 +1,6 @@
 #include "orion.h"
 
-#define MAX_BUFSIZE 2048
+#define MAX_BUFSIZE 4096
 #define MAX_CLIENTS 20
 
 bool active = true;
@@ -102,7 +102,7 @@ void* client_handler(void* c_arg)
 
 	send_to("Welcome!", cli->cfd);
 
-	sprintf(output_buffer, "%d Joined the chat!", cli->id);
+	snprintf(output_buffer, MAX_BUFSIZE, "%d Joined the chat!", cli->id);
 	send_all(output_buffer, cli->id);
 
 	while((msglen = read(cli->cfd, input_buffer, MAX_BUFSIZE)) != 0 ){
