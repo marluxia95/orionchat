@@ -1,4 +1,6 @@
 #include "orion.h"
+#include "orion_array.h"
+#include "orion_enc.h"
 
 #define MAX_BUFSIZE 4096
 #define MAX_CLIENTS 20
@@ -173,6 +175,18 @@ int main (int argc, const char* argv[])
 		address = argv[1];
 		port = atoi(argv[2]);	
 	}
+
+	unsigned char* args[2] = {
+		"Hello",
+		"World"
+	};
+
+	orion_array_t* arr = orion_enc(0x02, 2, args);
+	array_debug_print(arr);
+	char* dec_args[4];
+	orion_dec(arr->data, arr->used, dec_args);
+	printf("%s | %s\n", dec_args[0], dec_args[1]);
+	array_free(arr);
 
 	server.sfd = 0;
 

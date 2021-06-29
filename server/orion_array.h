@@ -12,4 +12,7 @@ typedef struct {
 void array_init(orion_array_t* array, size_t initial_size);
 void array_insert(orion_array_t* array, unsigned char data);
 void array_free(orion_array_t* array);
+
+void array_debug_print(orion_array_t* array);
+
 #endif
