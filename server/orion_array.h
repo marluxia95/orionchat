@@ -1,7 +1,8 @@
 #ifndef ORION_ARRAY_H
 #define ORION_ARRAY_H
-#include "orion.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct {
     unsigned char* data;

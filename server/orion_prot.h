@@ -1,9 +1,11 @@
-#ifndef ORION_ENC_H
-#define ORION_ENC_H
+#ifndef ORION_PROT_H
+#define ORION_PROT_H
 
-#include "orion.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include "orion_array.h"
-#include "orion_enc.h"
+#include "orion_core.h"
 
 //
 //  Understanding the protocol
@@ -24,9 +26,29 @@
 // 
 // 
 
+//
+//  Commands
+//
+
+#define C_HELLO 0x01
+#define C_NICK  0x02
+#define C_PKEY  0x03
+#define C_KEY   0x04
+#define C_MSG   0x05
+#define C_TYPE  0x06
+
+// 
+//  Errors
+//
+
+#define ERR_WRONG_NICK 0xA0
+
 #define PROTOCOL_VER 1
 
 orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* arguments[]);
 void orion_dec(unsigned char* data, size_t data_len, char* arguments[]);
+
+void send_to(const char* content, int cfd);
+void send_all(const char* content, int cfd);
 
 #endif

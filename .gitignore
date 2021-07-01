@@ -1,3 +1,5 @@
 server/server
+server/vgcore.*
 server/chadchat_server
-clients/C/client
+client/client
+client/vgcore.*

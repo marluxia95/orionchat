@@ -1,6 +1,6 @@
-#include "orion_enc.h"
+#include "orion_prot.h"
 
-
+// Encode data into array
 orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* arguments[])
 {
     orion_array_t* array = (orion_array_t*)malloc(sizeof(orion_array_t));
@@ -23,7 +23,7 @@ orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* argument
     return array;
 }
 
-// Decode data into array
+// Decode data into an argument array
 void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
 {
     // Different / Unknown protocol version
@@ -48,4 +48,28 @@ void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
         }
         current_arg++;
     }
+}
+
+// Sends a message to a client
+void send_to(const char* content, int cfd)
+{
+    unsigned char* args[] = {(unsigned char*)content};
+
+    orion_array_t* array = orion_enc(C_MSG, 1, args);
+
+    send_raw(array->data, array->used, cfd);
+
+    array_free(array);
+}
+
+// Sends a message to all clients except the sender (cfd)
+void send_all(const char* content, int cfd)
+{
+    unsigned char* args[] = {(unsigned char*)content};
+
+    orion_array_t* array = orion_enc(C_MSG, 1, args);
+
+    send_all_raw(array->data, array->used, cfd);
+
+    array_free(array);
 }

@@ -1,17 +1,22 @@
-#ifndef __ORION_INCLUDE__
-#define __ORION_INCLUDE__
+#ifndef ORION_H
+#define ORION_H
 
-#include <stdio.h>
-#include <unistd.h>
+#define MAX_BUFSIZE 1500
+#define MAX_CLIENTS 40
+
 #include <sys/socket.h>
-#include <stdlib.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <stdbool.h>
 #include <pthread.h>
-#include <netdb.h>
 
-#include "orion_core.h"
+typedef struct {
+	struct sockaddr_in c_address;
+	int cfd;
+	int id;
+	char name[16];
+} client_t;
+
+static pthread_mutex_t clients_lock;
+
+static client_t* clients[MAX_CLIENTS];
 
 #endif

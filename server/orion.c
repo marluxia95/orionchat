@@ -1,9 +1,14 @@
-#include "orion.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <stdbool.h>
+#include <pthread.h>
+#include "orion_core.h"
+#include "orion_prot.h"
 #include "orion_array.h"
-#include "orion_enc.h"
-
-#define MAX_BUFSIZE 4096
-#define MAX_CLIENTS 20
+#include "orion.h"
 
 bool active = true;
 int cli_count = 0;
@@ -12,10 +17,6 @@ static struct {
 	struct sockaddr_in s_address;
 	int sfd;
 } server;
-
-client_t* clients[MAX_CLIENTS];
-
-pthread_mutex_t clients_lock;
 
 void clear_buffer(char* buf)
 {
@@ -33,7 +34,6 @@ void add_client(client_t* cli)
 	pthread_mutex_unlock(&clients_lock);
 }
 
-// Removes a client 
 void remove_client(int id)
 {
 	pthread_mutex_lock(&clients_lock);
@@ -44,43 +44,21 @@ void remove_client(int id)
 	pthread_mutex_unlock(&clients_lock);
 }
 
+// Gets client's id using a socket file descriptor
+int get_client_id(int cfd)
+{
+	pthread_mutex_lock(&clients_lock);
+	for(int ci = 0; ci < MAX_CLIENTS; ci++){
+		if(clients[ci]->cfd == cfd)
+			return clients[ci]->id;
+	}
+	pthread_mutex_unlock(&clients_lock);
+}
+
 // Close all server connections 
 void close_all()
 {
 
-}
-
-// Sends a message to a client 
-void send_to(const char* msg, int cfd)
-{
-	if(write(cfd, msg, strlen(msg)) < 0){
-		perror("Failed to send message");
-	}
-}
-
-
-// Sends a message to all clients BUT the sender 
-void send_all(const char* msg, int senderid)
-{
-	pthread_mutex_lock(&clients_lock);
-	for(int ci = 0; ci < MAX_CLIENTS; ci++){
-		if(clients[ci]){
-			if(clients[ci]->id != senderid)
-				write(clients[ci]->cfd, msg, sizeof(msg));
-		}
-	}
-	pthread_mutex_unlock(&clients_lock);
-}
-
-// Sends a message to all clients 
-void broadcast(const char* msg)
-{
-	pthread_mutex_lock(&clients_lock);
-	for(int ci = 0; ci < MAX_CLIENTS; ci++){
-		if(clients[ci])
-			write(clients[ci]->cfd, msg, sizeof(msg));
-	}
-	pthread_mutex_unlock(&clients_lock);
 }
 
 // Handles a client connection ( always run in a thread ) 
@@ -96,9 +74,8 @@ void* client_handler(void* c_arg)
 
 	printf("Client %s ( %d ) connected\n", address_string, cli->cfd);
 		
-	char input_buffer[MAX_BUFSIZE];
-	char output_buffer[MAX_BUFSIZE];
-	int read_length;
+	unsigned char input_buffer[MAX_BUFSIZE];
+	unsigned char output_buffer[MAX_BUFSIZE];
 
 	puts("Sending msg");
 
@@ -108,16 +85,22 @@ void* client_handler(void* c_arg)
 	send_all(output_buffer, cli->id);
 
 	while((msglen = read(cli->cfd, input_buffer, MAX_BUFSIZE)) != 0 ){
-		puts("Message");
-		if(input_buffer[0] == '/'){
-			// Command shit
-
-			continue;
+		char* args[4];
+		orion_dec(input_buffer, msglen, args);
+		
+		if(input_buffer[1] == C_NICK){
+			if(strlen(args[0] <= 16)){
+				strcpy(cli->name, args[0]);
+			}
 		}
 
-		snprintf(output_buffer, MAX_BUFSIZE, "<%d> %s", cli->id, input_buffer);
-		puts(output_buffer);
-		send_all(output_buffer, cli->id);
+		if(input_buffer[1] == C_MSG){
+			if(strlen(args[0] <= 255)){
+				
+				
+
+			}
+		}
 	}
 
 	puts("Leave");
@@ -175,18 +158,6 @@ int main (int argc, const char* argv[])
 		address = argv[1];
 		port = atoi(argv[2]);	
 	}
-
-	unsigned char* args[2] = {
-		"Hello",
-		"World"
-	};
-
-	orion_array_t* arr = orion_enc(0x02, 2, args);
-	array_debug_print(arr);
-	char* dec_args[4];
-	orion_dec(arr->data, arr->used, dec_args);
-	printf("%s | %s\n", dec_args[0], dec_args[1]);
-	array_free(arr);
 
 	server.sfd = 0;
 

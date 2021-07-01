@@ -1,5 +1,6 @@
 #include "room.h"
 
+
 chatroom_t* chatrooms[MAX_CHATROOMS]; 
 
 pthread_mutex_t chatroom_lock;

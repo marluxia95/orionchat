@@ -1,6 +1,8 @@
 #ifndef __ROOM_INCLUDE_
 #define __ROOM_INCLUDE_
 
+#include <stdio.h>
+#include <pthread.h>
 #include "orion.h"
 
 #define MAX_CLIENTS_PER_ROOM 16384
@@ -19,7 +21,5 @@ void chatroom_send_all(const char msg, chatroom_t* room);
 void chatroom_send(const char* msg, int crid);
 void chatroom_adduser(int uid, int crid);
 void chatroom_removeuser(int uid, int crid);
-
-
 
 #endif

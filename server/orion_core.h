@@ -1,23 +1,17 @@
-#ifndef __CORE_INCLUDE_
-#define __CORE_INCLUDE_
+#ifndef ORION_CORE_H
+#define ORION_CORE_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <stdbool.h>
 #include "orion.h"
 
-typedef struct {
-	struct sockaddr_in c_address;
-	int cfd;
-	int id;
-	char name[16];
-} client_t;
 
-void clear_buffer(char* buf);
-void add_client(client_t* cli);
-void remove_client(int id);
-
-void close_all();
-
-void send_to(const char* msg, int cfd);
-void send_all(const char* msg, int senderid);
-void broadcast(const char* msg);
+void send_raw(void* data, size_t dsize, int cfd);
+void send_all_raw(void* data, size_t dsize, int senderid);
+void broadcast_raw(void* data, size_t dsize);
 
 #endif

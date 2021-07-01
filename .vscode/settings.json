@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "in.h": "c",
+        "stdio.h": "c",
+        "orion_array.h": "c"
+    }
+}

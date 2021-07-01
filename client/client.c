@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
-
+#include "orion_core.h"
 
 #define PORT 8080
 #define MAX_BUFSIZE 1024
@@ -17,14 +17,6 @@ char input_buffer[MAX_BUFSIZE];
 char output_buffer[MAX_BUFSIZE];
 int bufpos = 0;
 char c;
-
-// Sends a message 
-void send_to(char* msg, int sfd)
-{
-	if(write(sfd, msg, strlen(msg)) < 0){
-		perror("Failed to send message");
-	}
-}
 
 void* response_handler(void* arg)
 {
@@ -59,8 +51,6 @@ int main ( int argc, char const* argv[] )
 		return -1;
 	}
 
-	
-
 	pthread_create(&tid, NULL, &response_handler, NULL);
 
 	do{
@@ -73,8 +63,6 @@ int main ( int argc, char const* argv[] )
 			bufpos = 0;
         }
         bufpos++;
-
-
 
 	} while( active );
 }
