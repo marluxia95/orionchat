@@ -5,4 +5,4 @@ server/chadchat_server
 client/client
 client/vgcore.*
 client/liborion.a
-.vscode
+.vscode/
