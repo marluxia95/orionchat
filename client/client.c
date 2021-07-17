@@ -5,28 +5,79 @@
 #include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
+
 #include "orion_core.h"
+#include "orion_prot.h"
 
 #define PORT 8080
 #define MAX_BUFSIZE 1024
+#define MAX_MSGSIZE 255
 
-int sock = 0, valread;
+int sock = 0;
 struct sockaddr_in server_addr;
 bool active = true;
-char input_buffer[MAX_BUFSIZE];
-char output_buffer[MAX_BUFSIZE];
-int bufpos = 0;
-char c;
+bool readyToSend = false;
+unsigned char input_buffer[MAX_BUFSIZE];
 
+// Sends the client's nickname to server
+void setNickname(const char* nickname)
+{
+	char* args[] = {nickname};
+	orion_array_t* data_arr = orion_enc(C_NICK, 1, args);
+	send_raw(data_arr->data, data_arr->used, sock);
+	array_debug_print(data_arr);
+	array_free(data_arr);
+}
+
+// Response handler thread
 void* response_handler(void* arg)
 {
-	while((valread = read( sock, input_buffer, MAX_BUFSIZE )) != 0){
+	int datalen;
+	while((datalen = read( sock, input_buffer, MAX_BUFSIZE )) != 0){
 		
-		puts("Recv");
 		printf("%s\n", input_buffer);
 
+		char* arguments[4];
+
+		orion_dec(input_buffer, datalen, arguments);
+
+		switch(input_buffer[1]){
+			case C_MSG:
+				printf("<%s> %s\n", arguments[0], arguments[1]);
+				break;
+			case C_RMSG:
+				printf("%s\n", arguments[0]);
+				break;
+			case ERR_WRONG_NICK:
+				break;
+		}
 		memset(&input_buffer, 0, MAX_BUFSIZE);
 	}
+	active = false;
+	puts("Connection lost");
+	exit(0);
+	pthread_exit(0);
+}
+
+char* input_getLine()
+{
+	char* buffer = malloc(MAX_BUFSIZE +1);
+	char c;
+	uint8_t pos = 0;
+
+	while (true) {
+		c = getchar();
+
+		if(c == '\n' || c == EOF) {
+			return buffer;
+        }
+		if(pos >= MAX_MSGSIZE)
+			continue;
+		
+		buffer[pos] = c;
+		pos++;
+	}
+
 }
 
 int main ( int argc, char const* argv[] ) 
@@ -53,16 +104,17 @@ int main ( int argc, char const* argv[] )
 
 	pthread_create(&tid, NULL, &response_handler, NULL);
 
-	do{
-		c = getchar();
-		if(c == '\n' || c == EOF) {
-            output_buffer[bufpos + 1] = '\0';
-			send_to(output_buffer, sock);
-			memset(&output_buffer, 0, bufpos);
-			printf("Sent %d bytes", bufpos);
-			bufpos = 0;
-        }
-        bufpos++;
+	char nickname[16];
+	printf("Enter a nickname:");
+	fgets(nickname, 16, stdin);
+	nickname[strcspn(nickname, "\n")] = 0;
+	
+	setNickname(nickname);
 
-	} while( active );
+	while(active) {
+		char* msg = input_getLine();
+		printf("Sent %s\n", msg);
+		send_to(msg, sock);
+		free(msg);
+	}
 }

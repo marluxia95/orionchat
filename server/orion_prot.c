@@ -33,13 +33,17 @@ void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
     int pos = 0;
     int current_arg = 0;
     int size = data_len;
+#ifdef ORION_DEBUG
     printf("Data size : %d Protocol version : %d Command : %d\n", sizeof(data), data[0], data[1]);
+#endif
     pos = 2;
     
 
     while ( pos < size ){
         int argsize = (int)(((unsigned)data[pos] << 8) | data[pos+1]);
+#ifdef ORION_DEBUG
         printf("Argument %d ; Size : %d\n", current_arg, argsize);
+#endif
         pos += 2;
         arguments[current_arg] = (char*)malloc(argsize);
         for(int c = 0; c < argsize; c++){
@@ -48,9 +52,12 @@ void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
         }
         current_arg++;
     }
+#ifdef ORION_DEBUG
+    puts("Finished decoding");
+#endif
 }
 
-// Sends a message to a client
+// Sends a message
 void send_to(const char* content, int cfd)
 {
     unsigned char* args[] = {(unsigned char*)content};

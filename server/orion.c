@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <pthread.h>
+
 #include "orion_core.h"
 #include "orion_prot.h"
 #include "orion_array.h"
@@ -84,30 +85,40 @@ void* client_handler(void* c_arg)
 	snprintf(output_buffer, MAX_BUFSIZE, "%d Joined the chat!", cli->id);
 	send_all(output_buffer, cli->id);
 
+	char* args[4];
+
 	while((msglen = read(cli->cfd, input_buffer, MAX_BUFSIZE)) != 0 ){
-		char* args[4];
 		orion_dec(input_buffer, msglen, args);
 		
 		if(input_buffer[1] == C_NICK){
-			if(strlen(args[0] <= 16)){
-				strcpy(cli->name, args[0]);
+			if(strlen(args[0]) <= 16){
+				printf("%s(%d) -> %s\n",address_string, cli->cfd , args[0]);
+				strncpy(cli->name, args[0], 16);
+				cli->status = STATUS_READY; // Client is ready to send messages
 			}
 		}
+
+		if(cli->status<STATUS_READY) // Check if client has set a nickname
+			continue;
 
 		if(input_buffer[1] == C_MSG){
-			if(strlen(args[0] <= 255)){
-				
-				
-
+			if(strlen(args[0]) <= 255){
+				printf("<%s> %s\n", cli->name, args[0]);
 			}
 		}
+		
 	}
-
+	
 	puts("Leave");
+	for (int x = 0; x < 4; x++) {
+		if(args[x])
+			free(args[x]);
+	} 
 
 	cli_count--;
 	if(cli_count){
 		sprintf(output_buffer, "%d left the server", cli->id);
+		puts(output_buffer);
 		send_all(output_buffer, cli->id);
 	}
 

@@ -34,8 +34,9 @@
 #define C_NICK  0x02
 #define C_PKEY  0x03
 #define C_KEY   0x04
-#define C_MSG   0x05
-#define C_TYPE  0x06
+#define C_RMSG  0x05
+#define C_MSG   0x06
+#define C_TYPE  0x07
 
 // 
 //  Errors
