@@ -39,8 +39,10 @@ void remove_client(int id)
 {
 	pthread_mutex_lock(&clients_lock);
 	for(int ci = 0; ci < MAX_CLIENTS; ci++){
-		if(clients[ci]->id == id)
+		if(clients[ci]->id == id && clients[ci]) {
+			puts("Removing client from list");
 			clients[ci] = NULL;
+		}
 	}
 	pthread_mutex_unlock(&clients_lock);
 }
@@ -80,7 +82,7 @@ void* client_handler(void* c_arg)
 
 	puts("Sending msg");
 
-	send_to("Welcome!", cli->cfd);
+	ssend_to("Welcome!", cli->cfd);
 
 	snprintf(output_buffer, MAX_BUFSIZE, "%d Joined the chat!", cli->id);
 	send_all(output_buffer, cli->id);
@@ -91,18 +93,17 @@ void* client_handler(void* c_arg)
 		orion_dec(input_buffer, msglen, args);
 		
 		if(input_buffer[1] == C_NICK){
-			if(strlen(args[0]) <= 16){
-				printf("%s(%d) -> %s\n",address_string, cli->cfd , args[0]);
-				strncpy(cli->name, args[0], 16);
-				cli->status = STATUS_READY; // Client is ready to send messages
-			}
+			printf("%s(%d) -> %s\n",address_string, cli->cfd , args[0]);
+			strncpy(cli->name, args[0], 16);
+			cli->status = STATUS_READY; // Client is ready to send messages
 		}
 
 		if(cli->status<STATUS_READY) // Check if client has set a nickname
 			continue;
 
 		if(input_buffer[1] == C_MSG){
-			if(strlen(args[0]) <= 255){
+			int argsize = (int)(((unsigned)input_buffer[2] << 8) | input_buffer[3]);
+			if(argsize <= 255){ 
 				printf("<%s> %s\n", cli->name, args[0]);
 			}
 		}
@@ -117,7 +118,11 @@ void* client_handler(void* c_arg)
 
 	cli_count--;
 	if(cli_count){
-		sprintf(output_buffer, "%d left the server", cli->id);
+		if(cli->name)
+			sprintf(output_buffer, "%s left the server", cli->name);
+		else
+			sprintf(output_buffer, "%d left the server", cli->id);
+
 		puts(output_buffer);
 		send_all(output_buffer, cli->id);
 	}

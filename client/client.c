@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "orion_core.h"
 #include "orion_prot.h"
@@ -22,7 +23,7 @@ unsigned char input_buffer[MAX_BUFSIZE];
 // Sends the client's nickname to server
 void setNickname(const char* nickname)
 {
-	char* args[] = {nickname};
+	char* args[][16] = {nickname};
 	orion_array_t* data_arr = orion_enc(C_NICK, 1, args);
 	send_raw(data_arr->data, data_arr->used, sock);
 	array_debug_print(data_arr);
@@ -49,6 +50,7 @@ void* response_handler(void* arg)
 				printf("%s\n", arguments[0]);
 				break;
 			case ERR_WRONG_NICK:
+				printf("\e[1;31m Error : Invalid nickname \e[0m");
 				break;
 		}
 		memset(&input_buffer, 0, MAX_BUFSIZE);
@@ -63,12 +65,13 @@ char* input_getLine()
 {
 	char* buffer = malloc(MAX_BUFSIZE +1);
 	char c;
-	uint8_t pos = 0;
+	int pos = 0;
 
 	while (true) {
 		c = getchar();
 
 		if(c == '\n' || c == EOF) {
+			buffer[pos+1] = '\0';
 			return buffer;
         }
 		if(pos >= MAX_MSGSIZE)
@@ -78,6 +81,15 @@ char* input_getLine()
 		pos++;
 	}
 
+}
+
+void proccessInput(const char* msg)
+{
+	if(!strcmp(msg, "!quit")) {
+		exit(0);
+	}else{
+		send_to(msg, sock);
+	}
 }
 
 int main ( int argc, char const* argv[] ) 
@@ -113,8 +125,7 @@ int main ( int argc, char const* argv[] )
 
 	while(active) {
 		char* msg = input_getLine();
-		printf("Sent %s\n", msg);
-		send_to(msg, sock);
+		proccessInput(msg);
 		free(msg);
 	}
 }

@@ -50,6 +50,7 @@ orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* argument
 void orion_dec(unsigned char* data, size_t data_len, char* arguments[]);
 
 void send_to(const char* content, int cfd);
+void ssend_to(const char* content, int cfd);
 void send_all(const char* content, int cfd);
 
 #endif
