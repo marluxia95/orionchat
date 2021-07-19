@@ -29,8 +29,11 @@ void add_client(client_t* cli)
 {
 	pthread_mutex_lock(&clients_lock);
 	for(int ci = 0; ci < MAX_CLIENTS; ci++){
-		if(!clients[ci])
+		if(!clients[ci]){
+			puts("Added client");
 			clients[ci] = cli;
+			break;
+		}
 	}
 	pthread_mutex_unlock(&clients_lock);
 }
@@ -38,10 +41,13 @@ void add_client(client_t* cli)
 void remove_client(int id)
 {
 	pthread_mutex_lock(&clients_lock);
+	printf("Looking for client with id %d \n", id);
 	for(int ci = 0; ci < MAX_CLIENTS; ci++){
-		if(clients[ci]->id == id && clients[ci]) {
-			puts("Removing client from list");
-			clients[ci] = NULL;
+		if(clients[ci] != NULL){
+			if(clients[ci]->id == id) {
+				printf("Checking %d with id %d\n", ci, clients[ci]->id);
+				free(clients[ci]);
+			}
 		}
 	}
 	pthread_mutex_unlock(&clients_lock);
@@ -180,6 +186,7 @@ int main (int argc, const char* argv[])
 	server.sfd = socket(AF_INET, SOCK_STREAM, 0);
 	server.s_address.sin_family = AF_INET;
 	server.s_address.sin_port = htons(port);
+
 
 	if(!inet_pton(AF_INET, address, &server.s_address.sin_addr)){
 		puts("Invalid server address");
