@@ -90,18 +90,19 @@ void* client_handler(void* c_arg)
 
 	ssend_to("Welcome!", cli->cfd);
 
-	snprintf(output_buffer, MAX_BUFSIZE, "%d Joined the chat!", cli->id);
-	send_all(output_buffer, cli->id);
+	
 
-	char* args[4];
+	char** args;
 
 	while((msglen = read(cli->cfd, input_buffer, MAX_BUFSIZE)) != 0 ){
-		orion_dec(input_buffer, msglen, args);
+		args = orion_dec(input_buffer, msglen);
 		
 		if(input_buffer[1] == C_NICK){
 			printf("%s(%d) -> %s\n",address_string, cli->cfd , args[0]);
 			strncpy(cli->name, args[0], 16);
 			cli->status = STATUS_READY; // Client is ready to send messages
+			snprintf(output_buffer, MAX_BUFSIZE, "%s Joined the chat!\n", cli->name);
+			send_all(output_buffer, cli->id);
 		}
 
 		if(cli->status<STATUS_READY) // Check if client has set a nickname
@@ -111,16 +112,15 @@ void* client_handler(void* c_arg)
 			int argsize = (int)(((unsigned)input_buffer[2] << 8) | input_buffer[3]);
 			if(argsize <= 255){ 
 				printf("<%s> %s\n", cli->name, args[0]);
+				send_all(args[0], cli->id);
 			}
 		}
+		orion_clear(args);
 		
 	}
 	
 	puts("Leave");
-	for (int x = 0; x < 4; x++) {
-		if(args[x])
-			free(args[x]);
-	} 
+	
 
 	cli_count--;
 	if(cli_count){

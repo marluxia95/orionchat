@@ -35,12 +35,13 @@ void* response_handler(void* arg)
 {
 	int datalen;
 	while((datalen = read( sock, input_buffer, MAX_BUFSIZE )) != 0){
-		
+		if(!active){
+			pthread_exit(0);
+		}
+
 		printf("%s\n", input_buffer);
 
-		char* arguments[4];
-
-		orion_dec(input_buffer, datalen, arguments);
+		char** arguments = orion_dec(input_buffer, datalen);
 
 		switch(input_buffer[1]){
 			case C_MSG:
@@ -54,16 +55,18 @@ void* response_handler(void* arg)
 				break;
 		}
 		memset(&input_buffer, 0, MAX_BUFSIZE);
+		printf("test %d\n", sizeof(arguments));
+		orion_clear(arguments);
 	}
 	active = false;
 	puts("Connection lost");
-	exit(0);
 	pthread_exit(0);
 }
 
 char* input_getLine()
 {
-	char* buffer = malloc(MAX_BUFSIZE +1);
+	char* buffer = malloc(MAX_BUFSIZE + 10);
+	memset(buffer, 0, MAX_BUFSIZE + 10);
 	char c;
 	int pos = 0;
 
@@ -86,7 +89,7 @@ char* input_getLine()
 void proccessInput(const char* msg)
 {
 	if(!strcmp(msg, "!quit")) {
-		exit(0);
+		active = false;
 	}else{
 		send_to(msg, sock);
 	}
@@ -94,7 +97,7 @@ void proccessInput(const char* msg)
 
 int main ( int argc, char const* argv[] ) 
 {
-	pthread_t tid;
+	
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 		puts("Socket error");
@@ -114,7 +117,16 @@ int main ( int argc, char const* argv[] )
 		return -1;
 	}
 
-	pthread_create(&tid, NULL, &response_handler, NULL);
+	// Setup threads
+
+	pthread_attr_t attr;
+	pthread_t tid;
+	pthread_attr_init (&attr);
+	pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+
+	pthread_create(&tid, &attr, &response_handler, NULL);
+
+	pthread_attr_destroy (&attr);
 
 	char nickname[16];
 	printf("Enter a nickname:");
@@ -128,4 +140,9 @@ int main ( int argc, char const* argv[] )
 		proccessInput(msg);
 		free(msg);
 	}
+
+	printf("Goodbye fellow user!\n");
+
+	pthread_detach(tid);
+
 }

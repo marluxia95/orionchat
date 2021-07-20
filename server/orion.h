@@ -8,7 +8,7 @@
 #define MAX_BUFSIZE 1500
 #define MAX_CLIENTS 40
 
-#define ORION_DEBUG 
+#define ORION_DEBUG
 
 enum conn_status {
 	STATUS_NICKNAME,

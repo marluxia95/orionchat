@@ -47,7 +47,7 @@
 #define PROTOCOL_VER 1
 
 orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* arguments[]);
-void orion_dec(unsigned char* data, size_t data_len, char* arguments[]);
+char** orion_dec(unsigned char* data, size_t data_len);
 
 void send_to(const char* content, int cfd);
 void ssend_to(const char* content, int cfd);

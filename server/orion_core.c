@@ -12,10 +12,13 @@ void send_raw(void* data, size_t dsize, int cfd)
 void send_all_raw(void* data, size_t dsize, int senderid)
 {
 	pthread_mutex_lock(&clients_lock);
+	puts("Starting to send message to all clients");
 	for(int ci = 0; ci < MAX_CLIENTS; ci++){
 		if(clients[ci]){
-			if(clients[ci]->id != senderid)
-				write(clients[ci]->cfd, data, dsize);
+			if(clients[ci]->id != senderid){
+				printf("Sending message to %d", clients[ci]->id);
+				send_raw(data, dsize, clients[ci]->cfd);
+			}
 		}
 	}
 	pthread_mutex_unlock(&clients_lock);

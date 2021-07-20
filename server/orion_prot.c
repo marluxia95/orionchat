@@ -1,10 +1,12 @@
 #include "orion_prot.h"
 
+#define DEFAULT_ARGCOUNT 1
+
 // Encode data into array
 orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* arguments[])
 {
     unsigned char* currentArgument;
-    orion_array_t* array = (orion_array_t*)malloc(sizeof(orion_array_t));
+    orion_array_t* array = (orion_array_t*)malloc(sizeof(orion_array_t) + 2);
 
     array_init(array, arglen);
     
@@ -25,8 +27,31 @@ orion_array_t* orion_enc(uint8_t command, size_t arglen, unsigned char* argument
     return array;
 }
 
+void orion_clear(char** argdata)
+{
+    if(!argdata)
+        return;
+
+    int argcount = sizeof(argdata) / sizeof(char*);
+
+#ifdef ORION_DEBUG
+    puts("ARGARRAY FREE : ");
+    printf("Argcount : %d \n", argcount);
+#endif
+
+    for(int ar = 0; ar < argcount; ar++) {
+        free(argdata[ar]);
+    }
+
+    free(argdata);
+
+#ifdef ORION_DEBUG
+    puts("argarray free completed.");
+#endif
+}
+
 // Decode data into an argument array
-void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
+char** orion_dec(unsigned char* data, size_t data_len)
 {
     // Different / Unknown protocol version
     if(data[0] != PROTOCOL_VER)
@@ -35,6 +60,7 @@ void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
     int pos = 0;
     int current_arg = 0;
     int size = data_len;
+
 #ifdef ORION_DEBUG
     for(int x = 0; x < size; x++){
         printf("%x ", data[x]);
@@ -43,6 +69,7 @@ void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
 #endif
     pos = 2;
     
+    char** argdata = (char**)malloc(DEFAULT_ARGCOUNT * sizeof(char*));
 
     while ( pos < size ){
         int argsize = (int)(((unsigned)data[pos] << 8) | data[pos+1]);
@@ -50,16 +77,21 @@ void orion_dec(unsigned char* data, size_t data_len, char* arguments[])
         printf("Argument %d ; Size : %d\n", current_arg, argsize);
 #endif
         pos += 2;
-        arguments[current_arg] = (char*)malloc(argsize);
+
+
+        argdata[current_arg] = (char*)malloc(argsize * sizeof(char) + 10); 
+        memset(argdata[current_arg], 0, argsize * sizeof(char) + 10);
         for(int c = 0; c < argsize; c++){
-            arguments[current_arg][c] = data[pos];
+            argdata[current_arg][c] = data[pos];
             pos++;
         }
-        current_arg++;
+        argdata[current_arg][argsize+1] = '\0';
+        argdata = realloc(argdata, ++current_arg * sizeof(char*));
     }
 #ifdef ORION_DEBUG
     puts("Finished decoding");
 #endif
+    return argdata;
 }
 
 // Sends a message
@@ -87,13 +119,13 @@ void ssend_to(const char* content, int cfd)
 }
 
 // Sends a message to all clients except the sender ( Server Only ) 
-void send_all(const char* content, int cfd)
+void send_all(const char* content, int cid)
 {
     unsigned char* args[] = {(unsigned char*)content};
 
     orion_array_t* array = orion_enc(C_RMSG, 1, args);
 
-    send_all_raw(array->data, array->used, cfd);
+    send_all_raw(array->data, array->used, cid);
 
     array_free(array);
 }
